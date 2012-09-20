@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<executable>
+	<title>Network Analysis</title>
+	<description>A tool to get some mesures for a given network</description>
+	<contributor>Adrien Kaiser</contributor>
+	<version>1.0</version>
+	<parameters>
+		<label>Inputs</label>
+		<description>Inputs of the program</description>
+		<integer-vector>
+			<name>Matrix</name>
+			<flag>m</flag>
+			<longflag>matrix</longflag>
+			<description>Connectivity Matrix. Please give all the values separated by a comma</description>
+			<label>Connectivity Matrix</label>
+			<channel>input</channel>
+		</integer-vector>
+		<boolean>
+			<name>isWeighted</name>
+			<flag>w</flag>
+			<longflag>weighted</longflag>
+			<description>Enable if the values in the Matrix are Weighted</description>
+			<label>Is Weighted</label>
+			<default>false</default>
+		</boolean>
+	</parameters>
+	<parameters>
+		<label>Outputs</label>
+		<description>Outputs for the program</description>
+		<file fileExtensions="txt">
+			<name>ResultsFile</name>
+			<flag>f</flag>
+			<longflag>file</longflag>
+			<description>The given file will be generated and will contain all the results for the given matrix</description>
+			<label>Results File</label>
+		</file>
+	</parameters>
+</executable>
+			
