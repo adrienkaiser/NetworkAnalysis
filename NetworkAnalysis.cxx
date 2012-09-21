@@ -38,10 +38,60 @@ void DisplayMatrix( std::vector< std::vector< int > > M )
 	{
 		std::cout<<"| ";
 
-		for(unsigned int j=0 ; j<M.size() ; j++) std::cout<< M[i][j] << " ";
+		for(unsigned int j=0 ; j<M.size() ; j++)
+		{
+	//		std::cout<< M[i][j] << " ";
+/* To display ones and spaces for 0s:*/
+			if(M[i][j]==0) std::cout<< "  ";
+			else std::cout<< "1 ";
+
+		}
 
 		std::cout<<std::endl;
 	}
+}
+
+std::vector< std::vector< int > > RandomMatrix(int size)
+{
+	std::vector< std::vector< int > > M;
+
+	M.resize(size);
+
+	for(int i=0;i<size;i++)
+	{
+		M[i].resize(size);
+
+		for(int j=0;j<size;j++)
+		{
+			if( rand()%10 > 3 ) M[i][j] = 0; // 70% to have no link, 30% to have a link
+			else M[i][j] = 1;
+		}
+	}
+	return M;
+}
+
+std::vector< int > OpenMatrixFile(std::string path) // returns the matrix as a 1D vector -> then use Get2DMatrix() // returns empty vector if unopenable file
+{
+	std::vector< int > M;
+	std::ifstream file (path.c_str() , std::ios::in );  // opening in reading
+	if(! file) // error while opening
+	{
+		std::cout<<"| File can not be opened"<<std::endl;
+		return M; // returns empty vector
+	}
+
+	std::string line;
+	getline(file, line);
+	int value;
+	for(unsigned int j=0; j<line.size()/2 +1 ;j++) // half characters are comma, so /2
+	{
+		std::istringstream ( (&line[2*j]) ) >> value;
+		M.push_back(value); 
+	}
+
+	file.close();
+
+	return M;
 }
 
   /////////////////////////////////////////
@@ -70,6 +120,87 @@ int GetDegree( std::vector< std::vector< int > > M , int Node ) // ki // Node = 
 	for(unsigned int j=0 ; j<M.size() ; j++) Degree = Degree + M[Node][j];
 
 	return Degree;
+}
+
+double GetMeanDegree( std::vector< std::vector< int > > M )
+{
+	double Mean=0;
+
+	for(unsigned int i=0 ; i<M.size() ; i++) Mean = Mean + GetDegree (M,i);
+
+	Mean = Mean / M.size();
+
+	return Mean;
+}
+
+void DisplayDegreeDistribution( std::vector< std::vector< int > > M ) // table + "graph"
+{
+	/* Get Degree values */
+	std::vector< int > Degrees;
+	Degrees.resize( M.size() ); // 1 degree for each node
+	for(unsigned int i=0 ; i<M.size() ; i++) Degrees[i] = GetDegree (M,i);
+
+	/* Compute Distribution table*/
+	std::vector< std::vector< int > > Distrib; // 2 rows table
+	Distrib.resize( 2 ); // 2 rows : one for the degree values, one for the frequencies for each value
+
+	// Sort the values -> get Distrib[0]
+	sort( Degrees.begin(), Degrees.end() );
+
+	for(unsigned int i=0 ; i<Degrees.size() ; i++)
+	{
+		int OK=1;
+		for(unsigned int j=0 ; j<Distrib[0].size() ; j++) if(Distrib[0][j]==Degrees[i]) OK=0; // test if the degree is already in Distrib
+
+		if(OK==1) Distrib[0].push_back(Degrees[i]); // if it is not, push it
+	}
+
+	// Compute the frequency -> get Distrib[1]
+	Distrib[1].resize( Distrib[0].size() );
+	for(unsigned int i=0 ; i<Distrib[0].size() ; i++) // for all the different degrees
+	{
+		Distrib[1][i]=0; // frequency of the ith degree
+		for(unsigned int j=0 ; j<Degrees.size() ; j++) if(Degrees[j]==Distrib[0][i]) Distrib[1][i]++;
+	}
+
+	/* Display Distribution Table */
+	std::cout<<"| Distribution Table:" << std::endl;
+	std::cout<<"| Degree | Frequency" << std::endl;
+	for(unsigned int i=0 ; i<Distrib[0].size() ; i++)
+	{
+		if(Distrib[0][i]<10) std::cout<<"|      "<< Distrib[0][i] << " | " << Distrib[1][i] << std::endl;
+		else if(Distrib[0][i]>=10 && Distrib[0][i]<100) std::cout<<"|     "<< Distrib[0][i] << " | " << Distrib[1][i] << std::endl;
+		else if(Distrib[0][i]>=100) std::cout<<"|    "<< Distrib[0][i] << " | " << Distrib[1][i] << std::endl;
+	}
+
+	/* Distribution Graph */
+	std::cout<<"| Distribution Graph: " << std::endl;
+	int MaxFreq=0;
+	for(unsigned int i=0 ; i<Distrib[0].size() ; i++) if(Distrib[1][i]>MaxFreq) MaxFreq = Distrib[1][i];
+
+	for(unsigned int i=MaxFreq ; i>0; i--)
+	{
+		std::cout<<"| ";
+		for(unsigned int j=0 ; j<Distrib[0].size() ; j++) // for all the values
+		{
+			if(Distrib[1][j] >= (int)i)
+			{
+				if(Distrib[0][j]<10) std::cout<<"- ";
+				else if(Distrib[0][j]>=10 && Distrib[0][j]<100) std::cout<<"-  ";
+				else if(Distrib[0][j]>=100) std::cout<<" -  ";
+			}
+			else
+			{
+				if(Distrib[0][j]<10) std::cout<<"  ";
+				else if(Distrib[0][j]>=10 && Distrib[0][j]<100) std::cout<<"   ";
+				else if(Distrib[0][j]>=100) std::cout<<"    ";
+			}
+		}
+		std::cout<< std::endl;
+	}
+	std::cout<<"| ";
+	for(unsigned int i=0 ; i<Distrib[0].size() ; i++) std::cout<< Distrib[0][i]<< " ";// display the values at the bottom of the graph
+	std::cout<< std::endl;
 }
 
 int GetShortestPathLength( std::vector< std::vector< int > > M, int source, int target) // basis for measuring integration // dij
@@ -354,24 +485,98 @@ double GetLocalEfficiency( std::vector< std::vector< int > > M ) // Eloc
 }
 
   /////////////////////////////////////////
+ //       MEASURES OF RESILIENCE        //
+/////////////////////////////////////////
+
+double GetAssortativityCoefficient( std::vector< std::vector< int > > M ) // r
+{
+	double r=0; // so the return value in 0 if problem
+	double rnum1 = 0; // before the '-'
+	double rnum2 = 0; // after the '-'
+	double rdenom1 = 0; // before the '-'
+	double rdenom2 = 0; // after the '-'
+
+	int degreei, degreej; // ki, kj
+
+	for(unsigned int i=0 ; i<M.size() ; i++)
+	{
+		degreei = GetDegree(M,i);
+		for(unsigned int j=0 ; j<M.size() ; j++)
+		{
+			degreej = GetDegree(M,j);
+
+			rnum1 = rnum1 + (degreei * degreej);
+			rnum2 = rnum2 + 0.5*(degreei + degreej);
+			rdenom1 = rdenom1 + 0.5*(degreei*degreei + degreej*degreej);
+			rdenom2 = rdenom2 + 0.5*(degreei + degreej);
+		}
+	}
+
+	rnum1 = rnum1/M.size(); // l= M.size()
+	rnum2 = rnum2/M.size() * rnum2/M.size(); // l= M.size()
+	rdenom1 = rdenom1/M.size(); // l= M.size()
+	rdenom2 = rdenom2/M.size() * rdenom2/M.size(); // l= M.size()
+
+	if(rdenom1-rdenom2 != 0) r = (rnum1-rnum2) / (rdenom1-rdenom2);
+
+	return r;
+}
+
+  /////////////////////////////////////////
+ //            OTHER CONCEPTS           //
+/////////////////////////////////////////
+
+double GetSmallWorldness( std::vector< std::vector< int > > M ) // S
+{
+	double S,C,Crand,L,Lrand;
+	std::vector< std::vector< int > > RandM = RandomMatrix( M.size() );
+
+	C = GetClusteringCoefficient( M );
+	Crand = GetClusteringCoefficient( RandM );
+	L = GetCharacteristicPathLength( M );
+	Lrand = GetCharacteristicPathLength( RandM );
+
+	S = (C/Crand) / (L/Lrand);
+
+	return S;
+}
+
+  /////////////////////////////////////////
  //           MAIN FUNCTION             //
 /////////////////////////////////////////
 
 int main (int argc, char *argv[])
 {
 	PARSE_ARGS; //thanks to this line, we can use the variables entered in command line as variables of the program
-	//std::vector< int > Matrix, file ResultsFile, bool isWeighted
+	//std::vector< int > Matrix, file ResultsFile, bool isWeighted, file MatrixFile
+
+/* Input Test */
+	if(Matrix.size()==0)
+	{
+		if( !MatrixFile.empty() ) Matrix=OpenMatrixFile( MatrixFile );
+		else
+		{
+			std::cout<<"| Please give a Matrix for Analysis: Abort"<<std::endl;
+			return -1;
+		}
+	}
 
 /* Matrix Test */
 	if(Matrix.size()==0)
 	{
-		std::cout<<"Please give a Matrix for Analysis: Abort"<<std::endl;
+		std::cout<<"| Please give a non empty Matrix for Analysis: Abort"<<std::endl;
 		return -1;
 	}
 
 	if(Matrix.size()==1) // because divide by n-1
 	{
-		std::cout<<"Please give a Matrix and not a scalar: Abort"<<std::endl;
+		std::cout<<"| Please give a Matrix and not a scalar: Abort"<<std::endl;
+		return -1;
+	}
+
+	if ( ! fmod( sqrt( Matrix.size() ) , 1) == 0) // if sqrt not an integer, then matrix not square
+	{
+		std::cout<<"| Please give a Square Matrix : Abort"<<std::endl;
 		return -1;
 	}
 
@@ -384,6 +589,13 @@ int main (int argc, char *argv[])
 	std::cout<<"| Number of links in the network: "<< nbLinks <<std::endl;
 
 	DisplayMatrix( M );
+
+/* Degree Distribution */
+	std::cout<<"|"<<std::endl<< "| => Degree Distribution: " <<std::endl;
+	double MeanDegree = GetMeanDegree( M );
+	std::cout<<"| Mean Degree (Density) = " << MeanDegree <<std::endl;
+
+	DisplayDegreeDistribution( M );
 
 /* Measures of integration */
 	std::cout<<"|"<<std::endl<< "| => Measures of Integration: " <<std::endl;
@@ -400,6 +612,16 @@ int main (int argc, char *argv[])
 	std::cout<<"| Transivity = " << Transivity <<std::endl;
 	double LocalEfficiency = GetLocalEfficiency( M );
 	std::cout<<"| Local Efficiency = " << LocalEfficiency <<std::endl;
+
+/* Measures of resilience */
+	std::cout<<"|"<<std::endl<< "| => Measures of Resilience:" <<std::endl;
+	double AssortativityCoefficient = GetAssortativityCoefficient( M );
+	std::cout<<"| Assortativity Coefficient = " << AssortativityCoefficient <<std::endl;
+
+/* Other Concepts */
+	std::cout<<"|"<<std::endl<< "| => Other Concepts:" <<std::endl;
+	double SmallWorldness = GetSmallWorldness( M );
+	std::cout<<"| Small-Worldness = " << SmallWorldness <<std::endl;
 
 /* Open and write the file */
 	if(! ResultsFile.empty() )
@@ -421,6 +643,10 @@ int main (int argc, char *argv[])
 			file <<std::endl;
 		}
 
+		file <<std::endl<< "=> Degree Distribution: " <<std::endl;
+		file <<"Mean Degree (Density) = " << MeanDegree <<std::endl;
+		// DisplayDegreeDistribution( M ); ???
+
 		file <<std::endl<< "=> Measures of Integration: " <<std::endl;
 		file <<"Characteristic Path Length = " << CharacteristicPathLength <<std::endl;
 		file <<"Global Efficiency = " << GlobalEfficiency <<std::endl;
@@ -430,8 +656,16 @@ int main (int argc, char *argv[])
 		file <<"Transivity = " << Transivity <<std::endl;
 		file <<"Local Efficiency = " << LocalEfficiency <<std::endl;
 
+		file <<std::endl<< "=> Measures of Resilience:" <<std::endl;
+		file <<"Assortativity Coefficient = " << AssortativityCoefficient <<std::endl;
+
+		file <<std::endl<< "=> Other Concepts:" <<std::endl;
+		file <<"Small-Worldness = " << SmallWorldness <<std::endl;
+
 		file.close();
-	}
+	} // if(! ResultsFile.empty() )
+
+//	DisplayDegreeDistribution( RandomMatrix(500) ); // to test the degree distribution
 
 /* End of Main function */
 

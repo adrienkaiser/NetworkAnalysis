@@ -11,10 +11,16 @@
 			<name>Matrix</name>
 			<flag>m</flag>
 			<longflag>matrix</longflag>
-			<description>Connectivity Matrix. Please give all the values separated by a comma</description>
+			<description>Connectivity Matrix. Please give all the values separated by a comma. If there are both command line matrix and matrix file, the command line matrix will be used</description>
 			<label>Connectivity Matrix</label>
 			<channel>input</channel>
 		</integer-vector>
+		<file>
+			<name>MatrixFile</name>
+			<longflag>matrixFile</longflag>
+			<description>This file contains all the values of the matrix on one line and separated by a comma, without spaces. If there are both command line matrix and matrix file, the command line matrix will be used</description>
+			<label>Matrix File</label>
+		</file>
 		<boolean>
 			<name>isWeighted</name>
 			<flag>w</flag>
